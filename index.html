@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Pontos Turísticos de Brasília - Home</title>
+</head>
+<body>
+
+    <div class="content" style="text-align: center;">
+        <nav>
+            <a href="index.html" class="active" id="nav-home">Home</a>
+            <a href="ondeir.html">Onde Ir</a>
+            <a href="favoritos.html">Favoritos</a>
+            <a href="#" onclick="mostrarSecao('login')" id="nav-login">Login / Admin</a>
+        </nav>
+
+        <!-- SEU CONTEÚDO ORIGINAL INTACTO -->
+        <div id="secao-home">
+            <h1 id="site-titulo">Guia Turístico</h1>
+            <h2 id="site-subtitulo" style="font-size: 18px; color: #4a5568; border: none; margin-top: 0;">Distrito Federal, Brasil</h2>
+            
+            <img src="brasilia.jpg" alt="Vista de Brasília" class="img-turismo">
+            
+            <p>Explore os principais marcos arquitetônicos, culturais e históricos de Brasília, Ceilândia e Taguatinga.</p>
+        </div>
+
+        <!-- SEÇÃO: LOGIN -->
+        <div id="secao-login" class="auth-container hidden">
+            <h2>Entrar no Sistema</h2>
+            <div id="login-msg" class="alert-msg"></div>
+            <form onsubmit="realizarLogin(event)">
+                <label>Usuário ou E-mail:</label>
+                <input type="text" id="login-user" required>
+                
+                <label>Senha:</label>
+                <input type="password" id="login-pass" required>
+                
+                <button type="submit">Entrar</button>
+            </form>
+            <p style="margin-top: 15px; text-align: center;">
+                <button class="link-btn" onclick="mostrarSecao('recuperar')">Esqueci minha senha</button> | 
+                <button class="link-btn" onclick="mostrarSecao('cadastro')">Criar Conta</button> |
+                <button class="link-btn" onclick="mostrarSecao('home')">Voltar</button>
+            </p>
+        </div>
+
+        <!-- SEÇÃO: CADASTRO COM PERFIL DETALHADO -->
+        <div id="secao-cadastro" class="auth-container hidden">
+            <h2>Criar Conta</h2>
+            <div id="cad-msg" class="alert-msg"></div>
+            <form onsubmit="realizarCadastro(event)">
+                <label>Nome de Usuário:</label>
+                <input type="text" id="cad-user" required>
+                
+                <label>Nome Completo:</label>
+                <input type="text" id="cad-nome-completo" required>
+
+                <label>E-mail:</label>
+                <input type="email" id="cad-email" required>
+                
+                <label>Cidade e Estado (Ex: Brasília - DF):</label>
+                <input type="text" id="cad-cidade" placeholder="Ex: Taguatinga - DF" required>
+
+                <label>Sexo:</label>
+                <select id="cad-sexo" required style="width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    <option value="">Selecione...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Outro">Outro</option>
+                    <option value="Prefiro não dizer">Prefiro não dizer</option>
+                </select>
+
+                <label>Idade:</label>
+                <input type="number" id="cad-idade" min="1" max="120" required>
+
+                <label>Senha:</label>
+                <input type="password" id="cad-pass" required>
+                
+                <button type="submit">Cadastrar</button>
+            </form>
+            <p style="text-align: center; margin-top: 15px;">
+                Já tem uma conta? <button class="link-btn" onclick="mostrarSecao('login')">Faça login</button>
+            </p>
+        </div>
+
+        <!-- SEÇÃO: RECUPERAÇÃO DE SENHA -->
+        <div id="secao-recuperar" class="auth-container hidden">
+            <h2>Recuperação de Senha</h2>
+            <p style="font-size: 14px; color: #666;">Se você for usuário comum, informe seu e-mail. Se você for o **Admin 1**, solicite ao **Admin Master** para redefinir sua senha.</p>
+            <div id="rec-msg"></div>
+            <form onsubmit="recuperarSenha(event)">
+                <label>E-mail ou Usuário:</label>
+                <input type="text" id="rec-input" required>
+                <button type="submit">Recuperar Senha</button>
+            </form>
+            <p style="text-align: center; margin-top: 15px;">
+                <button class="link-btn" onclick="mostrarSecao('login')">Voltar ao Login</button>
+            </p>
+        </div>
+
+        <!-- PAINEL: ADMINISTRADOR 1 (Geral) -->
+        <div id="painel-admin1" class="panel-container hidden" style="max-width: 800px;">
+            <h2>Painel - Administrador 1</h2>
+            <p>Bem-vindo, <b>Admin 1</b>. Você pode alterar configurações do site, sua senha e gerenciar os usuários cadastrados.</p>
+            
+            <hr style="margin: 15px 0;">
+            <h3>Configurações do Site</h3>
+            <label>Título do Site:</label>
+            <input type="text" id="cfg-titulo" value="Guia Turístico">
+            <label>Subtítulo:</label>
+            <input type="text" id="cfg-subtitulo" value="Distrito Federal, Brasil">
+            <button onclick="salvarConfiguracoes()">Salvar Alterações</button>
+
+            <hr style="margin: 20px 0;">
+            <h3>Alterar Minha Senha</h3>
+            <label>Nova Senha:</label>
+            <input type="password" id="admin1-nova-senha" placeholder="Digite sua nova senha">
+            <button onclick="alterarSenhaAdmin1()">Atualizar Minha Senha</button>
+
+            <hr style="margin: 20px 0;">
+            <h3>Usuários Cadastrados (Quem é e de onde vem)</h3>
+            <p style="font-size: 13px; color: #666;">Lista completa com os dados de perfil e opção para redefinir a senha:</p>
+            <div id="lista-usuarios-admin" style="overflow-x: auto;"></div>
+
+            <br><br>
+            <button style="background-color: #e53e3e;" onclick="logout()">Sair</button>
+        </div>
+
+        <!-- PAINEL: ADMINISTRADOR MASTER -->
+        <div id="painel-master" class="panel-container hidden">
+            <h2>Painel - Administrador Master</h2>
+            <p>Controle supremo do site. Caso o Administrador 1 esqueça a senha, você pode redefini-la abaixo.</p>
+            
+            <hr style="margin: 15px 0;">
+            <h3>Redefinir Senha do Admin 1</h3>
+            <label>Nova senha para o Admin 1:</label>
+            <input type="password" id="master-nova-senha-admin1" placeholder="Nova senha">
+            <button onclick="masterResetAdmin1()">Redefinir Senha do Admin 1</button>
+
+            <br><br>
+            <button style="background-color: #e53e3e;" onclick="logout()">Sair</button>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT DE CONTROLE DO SISTEMA -->
+    <script>
+        if (!localStorage.getItem('usuarios')) {
+            localStorage.setItem('usuarios', JSON.stringify([
+                { user: 'admin1', pass: 'admin123', tipo: 'admin1', email: 'admin1@site.com', nome: 'Administrador Geral', cidade: 'Brasília - DF', sexo: 'N/A', idade: '--' },
+                { user: 'adminmaster', pass: 'master123', tipo: 'master', email: 'master@site.com', nome: 'Administrador Master', cidade: 'Brasília - DF', sexo: 'N/A', idade: '--' }
+            ]));
+        }
+        if (!localStorage.getItem('siteConfig')) {
+            localStorage.setItem('siteConfig', JSON.stringify({
+                titulo: 'Guia Turístico',
+                subtitulo: 'Distrito Federal, Brasil'
+            }));
+        }
+
+        window.onload = function() {
+            let config = JSON.parse(localStorage.getItem('siteConfig'));
+            document.getElementById('site-titulo').innerText = config.titulo;
+            document.getElementById('site-subtitulo').innerText = config.subtitulo;
+            document.getElementById('cfg-titulo').value = config.titulo;
+            document.getElementById('cfg-subtitulo').value = config.subtitulo;
+        };
+
+        function esconderTodasSecoes() {
+            document.getElementById('secao-home').classList.add('hidden');
+            document.getElementById('secao-login').classList.add('hidden');
+            document.getElementById('secao-cadastro').classList.add('hidden');
+            document.getElementById('secao-recuperar').classList.add('hidden');
+            document.getElementById('painel-admin1').classList.add('hidden');
+            document.getElementById('painel-master').classList.add('hidden');
+        }
+
+        function mostrarSecao(secao) {
+            esconderTodasSecoes();
+            if (secao === 'home') document.getElementById('secao-home').classList.remove('hidden');
+            if (secao === 'login') document.getElementById('secao-login').classList.remove('hidden');
+            if (secao === 'cadastro') document.getElementById('secao-cadastro').classList.remove('hidden');
+            if (secao === 'recuperar') document.getElementById('secao-recuperar').classList.remove('hidden');
+            if (secao === 'admin1') {
+                document.getElementById('painel-admin1').classList.remove('hidden');
+                carregarUsuariosAdmin1();
+            }
+            if (secao === 'master') document.getElementById('painel-master').classList.remove('hidden');
+        }
+
+        function realizarLogin(event) {
+            event.preventDefault();
+            let usuarioInput = document.getElementById('login-user').value;
+            let senhaInput = document.getElementById('login-pass').value;
+            let msgDiv = document.getElementById('login-msg');
+
+            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            let encontrado = usuarios.find(u => (u.user === usuarioInput || u.email === usuarioInput) && u.pass === senhaInput);
+
+            if (encontrado) {
+                msgDiv.innerText = '';
+                if (encontrado.tipo === 'admin1') {
+                    mostrarSecao('admin1');
+                } else if (encontrado.tipo === 'master') {
+                    mostrarSecao('master');
+                } else {
+                    alert('Login realizado com sucesso! Bem-vindo, ' + encontrado.user);
+                    mostrarSecao('home');
+                    document.getElementById('nav-login').innerText = 'Olá, ' + encontrado.user;
+                }
+            } else {
+                msgDiv.innerText = 'Usuário ou senha incorretos!';
+            }
+        }
+
+        function realizarCadastro(event) {
+            event.preventDefault();
+            let user = document.getElementById('cad-user').value;
+            let nome = document.getElementById('cad-nome-completo').value;
+            let email = document.getElementById('cad-email').value;
+            let cidade = document.getElementById('cad-cidade').value;
+            let sexo = document.getElementById('cad-sexo').value;
+            let idade = document.getElementById('cad-idade').value;
+            let pass = document.getElementById('cad-pass').value;
+            let msgDiv = document.getElementById('cad-msg');
+
+            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            if (usuarios.some(u => u.user === user || u.email === email)) {
+                msgDiv.innerText = 'Usuário ou e-mail já cadastrados!';
+                return;
+            }
+
+            usuarios.push({ user, nome, email, cidade, sexo, idade, pass, tipo: 'comum' });
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            alert('Cadastro realizado com sucesso! Faça login.');
+            mostrarSecao('login');
+        }
+
+        function recuperarSenha(event) {
+            event.preventDefault();
+            let val = document.getElementById('rec-input').value;
+            let recMsg = document.getElementById('rec-msg');
+            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            let usuario = usuarios.find(u => u.user === val || u.email === val);
+
+            if (usuario) {
+                if (usuario.tipo === 'admin1') {
+                    recMsg.innerHTML = '<span class="alert-msg">Esta conta é do Administrador 1. Por segurança, apenas o **Admin Master** pode redefinir esta senha.</span>';
+                } else if (usuario.tipo === 'master') {
+                    recMsg.innerHTML = '<span class="alert-msg">Entre em contato com o suporte técnico para recuperar a senha do Admin Master.</span>';
+                } else {
+                    recMsg.innerHTML = `<span class="success-msg">Sua senha é: <b>${usuario.pass}</b></span>`;
+                }
+            } else {
+                recMsg.innerHTML = '<span class="alert-msg">Usuário ou e-mail não encontrados.</span>';
+            }
+        }
+
+        function salvarConfiguracoes() {
+            let titulo = document.getElementById('cfg-titulo').value;
+            let subtitulo = document.getElementById('cfg-subtitulo').value;
+
+            let config = { titulo, subtitulo };
+            localStorage.setItem('siteConfig', JSON.stringify(config));
+
+            document.getElementById('site-titulo').innerText = titulo;
+            document.getElementById('site-subtitulo').innerText = subtitulo;
+            alert('Configurações salvas com sucesso!');
+        }
+
+        function alterarSenhaAdmin1() {
+            let novaSenha = document.getElementById('admin1-nova-senha').value;
+            if (!novaSenha) {
+                alert('Digite a nova senha.');
+                return;
+            }
+            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            let adm = usuarios.find(u => u.tipo === 'admin1');
+            if (adm) {
+                adm.pass = novaSenha;
+                localStorage.setItem('usuarios', JSON.stringify(usuarios));
+                alert('Senha do Admin 1 alterada com sucesso!');
+                document.getElementById('admin1-nova-senha').value = '';
+            }
+        }
+
+        function carregarUsuariosAdmin1() {
+            let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+            let container = document.getElementById('lista-usuarios-admin');
+            let comuns = usuarios.filter(u => u.tipo === 'comum');
+
+            if (comuns.length === 0) {
+                container.innerHTML = '<p style="font-size: 14px; color: #888;">Nenhum usuário comum cadastrado ainda.</p>';
+                return;
+            }
+
+            let html = '<table style="width:100%; font-size:13px; border-collapse: collapse; margin-top: 10px;">';
+            html += '<tr style="background:#edf2f7; text-align:left;"><th style="padding:6px;">Perfil (Quem é)</th><th style="padding:6px;">Local / Idade / Sexo (De onde vem)</th><th style="padding:6px;">Alterar Senha</th></tr>';
+            
+            comuns.forEach(u => {
+                html += `<tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding:8px;">
+                        <b>User:</b> ${u.user}<br>
+                        <b>Nome:</b> ${u.nome || '-'}<br>
+                        <b>E-mail:</b> ${u.email}
+                    </td>
+                    <td style="padding:8px;">
+                        <b>Cidade:</b> ${u.cidade || '-'}<br>
+                        <b>Idade:</b> ${u.idade || '-'} anos<br>
+                        <b>Sexo:</b> ${u.sexo || '-'}
+                    </td>
+                    <td style="padding:8px;">
+                        <input type="password" id="nova-senha-${u.user}" placeholder="Nova senha" style="width:110px; padding:5px; margin-bottom:4px; display:block; border:1px solid #ccc; border-radius:4px;">
+                        <button onclick="admin1MudarSenhaUsuario('${u.user}')" style="width:auto; padding:5px 10px; font-size:11px; background-color:#3182ce; color:white; border:none; border-radius:4px; cursor:pointer;">Salvar Senha</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function admin1MudarSenhaUsuario(username) {
+            let inputSenha = document.getElementById(`nova-senha-${username}`);
+            let novaSenha = inputSenha.value;
+
+            if (!novaSenha) {
+                alert('Digite a nova senha para o usuário ' + username);
+                return;
+            }
+
+            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            let usuario = usuarios.find(u => u.user === username);
+
+            if (usuario) {
+                usuario.pass = novaSenha;
+                localStorage.setItem('usuarios', JSON.stringify(usuarios));
+                alert(`Senha do usuário ${username} alterada com sucesso!`);
+                inputSenha.value = '';
+                carregarUsuariosAdmin1();
+            }
+        }
+
+        function masterResetAdmin1() {
+            let novaSenha = document.getElementById('master-nova-senha-admin1').value;
+            if (!novaSenha) {
+                alert('Digite a nova senha para o Admin 1.');
+                return;
+            }
+            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            let adm = usuarios.find(u => u.tipo === 'admin1');
+            if (adm) {
+                adm.pass = novaSenha;
+                localStorage.setItem('usuarios', JSON.stringify(usuarios));
+                alert('A senha do Admin 1 foi redefinida com sucesso pelo Admin Master!');
+                document.getElementById('master-nova-senha-admin1').value = '';
+            }
+        }
+
+        function logout() {
+            mostrarSecao('home');
+            document.getElementById('nav-login').innerText = 'Login / Admin';
+        }
+    </script>
+</body>
+</html>
