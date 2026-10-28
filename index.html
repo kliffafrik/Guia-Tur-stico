@@ -484,7 +484,7 @@
 
         function atualizarNavegacao() {
             document.getElementById('nav-perfil').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo !== 'comum');
-            document.getElementById('nav-painel-admin').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo === 'comum');
+            document.getElementById('nav-painel-admin').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo !== 'admin1');
             document.getElementById('nav-login').classList.toggle('hidden', !!usuarioLogado);
             document.getElementById('nav-sair').classList.toggle('hidden', !usuarioLogado);
         }
