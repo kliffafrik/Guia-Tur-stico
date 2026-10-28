@@ -33,7 +33,7 @@
     });
 
     let links = [
-        { id: 'nav-perfil', label: 'Perfil', href: 'index.html?perfil=1', commonOnly: true },
+        { id: 'nav-perfil', label: 'Perfil', href: 'perfil.html', commonOnly: true },
         { id: 'nav-painel-admin', label: 'Painel Admin', href: 'index.html?painel-admin=1', adminOnly: true },
         { id: 'nav-login', label: 'Login / Admin', href: 'index.html?login=1', loggedOutOnly: true },
         { id: 'nav-sair', label: 'Sair', href: 'index.html', loggedInOnly: true }
@@ -65,11 +65,19 @@
             : loggedInOnly ? !usuarioLogado
             : false);
 
+        if (id === 'nav-perfil') link.href = href;
+        link.classList.toggle('active', id === 'nav-perfil' && /perfil\.html$/i.test(window.location.pathname));
+        if (loggedInOnly) {
+            link.href = href;
+            link.removeAttribute('onclick');
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                sessionStorage.removeItem('usuarioLogado');
+                window.location.assign(href);
+            });
+        }
         if (isHomePage) return;
 
         link.href = href;
-        if (loggedInOnly) {
-            link.onclick = () => sessionStorage.removeItem('usuarioLogado');
-        }
     });
 })();
