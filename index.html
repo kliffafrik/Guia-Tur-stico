@@ -63,14 +63,19 @@
                 <label>Cidade e Estado (Ex: Brasília - DF):</label>
                 <input type="text" id="cad-cidade" placeholder="Ex: Taguatinga - DF" required>
 
-                <label>Sexo:</label>
-                <select id="cad-sexo" required style="width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <label for="cad-identidade-genero">Identidade de gênero (opcional):</label>
+                <select id="cad-identidade-genero" onchange="atualizarOutraIdentidade()" style="width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
                     <option value="">Selecione...</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Feminino">Feminino</option>
-                    <option value="Outro">Outro</option>
-                    <option value="Prefiro não dizer">Prefiro não dizer</option>
+                    <option value="Mulher">Mulher</option>
+                    <option value="Homem">Homem</option>
+                    <option value="Pessoa não binária">Pessoa não binária</option>
+                    <option value="Outra identidade">Outra identidade</option>
+                    <option value="Prefiro não informar">Prefiro não informar</option>
                 </select>
+                <div id="cad-outra-identidade-container" class="hidden">
+                    <label for="cad-outra-identidade">Como você se identifica?</label>
+                    <input type="text" id="cad-outra-identidade" maxlength="80" autocomplete="off">
+                </div>
 
                 <label>Idade:</label>
                 <input type="number" id="cad-idade" min="1" max="120" required>
@@ -221,7 +226,10 @@
             let nome = document.getElementById('cad-nome-completo').value;
             let email = document.getElementById('cad-email').value;
             let cidade = document.getElementById('cad-cidade').value;
-            let sexo = document.getElementById('cad-sexo').value;
+            let identidadeGenero = document.getElementById('cad-identidade-genero').value;
+            if (identidadeGenero === 'Outra identidade') {
+                identidadeGenero = document.getElementById('cad-outra-identidade').value.trim() || identidadeGenero;
+            }
             let idade = document.getElementById('cad-idade').value;
             let pass = document.getElementById('cad-pass').value;
             let msgDiv = document.getElementById('cad-msg');
@@ -232,10 +240,20 @@
                 return;
             }
 
-            usuarios.push({ user, nome, email, cidade, sexo, idade, pass, tipo: 'comum' });
+            usuarios.push({ user, nome, email, cidade, identidadeGenero, idade, pass, tipo: 'comum' });
             localStorage.setItem('usuarios', JSON.stringify(usuarios));
             alert('Cadastro realizado com sucesso! Faça login.');
             mostrarSecao('login');
+        }
+
+        function atualizarOutraIdentidade() {
+            let identidade = document.getElementById('cad-identidade-genero').value;
+            let container = document.getElementById('cad-outra-identidade-container');
+            let campo = document.getElementById('cad-outra-identidade');
+            let mostrarCampo = identidade === 'Outra identidade';
+
+            container.classList.toggle('hidden', !mostrarCampo);
+            if (!mostrarCampo) campo.value = '';
         }
 
         function recuperarSenha(event) {
@@ -297,7 +315,7 @@
             }
 
             let html = '<table style="width:100%; font-size:13px; border-collapse: collapse; margin-top: 10px;">';
-            html += '<tr style="background:#edf2f7; text-align:left;"><th style="padding:6px;">Perfil (Quem é)</th><th style="padding:6px;">Local / Idade / Sexo (De onde vem)</th><th style="padding:6px;">Alterar Senha</th></tr>';
+            html += '<tr style="background:#edf2f7; text-align:left;"><th style="padding:6px;">Perfil (Quem é)</th><th style="padding:6px;">Local / Idade / Identidade de gênero</th><th style="padding:6px;">Alterar Senha</th></tr>';
             
             comuns.forEach(u => {
                 html += `<tr style="border-bottom: 1px solid #ddd;">
@@ -309,7 +327,7 @@
                     <td style="padding:8px;">
                         <b>Cidade:</b> ${u.cidade || '-'}<br>
                         <b>Idade:</b> ${u.idade || '-'} anos<br>
-                        <b>Sexo:</b> ${u.sexo || '-'}
+                        <b>Identidade de gênero:</b> ${u.identidadeGenero || u.sexo || '-'}
                     </td>
                     <td style="padding:8px;">
                         <input type="password" id="nova-senha-${u.user}" placeholder="Nova senha" style="width:110px; padding:5px; margin-bottom:4px; display:block; border:1px solid #ccc; border-radius:4px;">
