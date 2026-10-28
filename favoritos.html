@@ -2,21 +2,23 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="style.css">
-    <title>PONTOS TURISTICOS DE BRASÍLIA</title>
-    <div>
-        <h1>Trabalhando com links</h1>
-        <a href="index.html" class="active">Home</a>
-        </div>
-
-        <div class="content">
-            <h2>página inicial </h2>
-            <p>Essa é a página principal do site </p>
-
-        </div>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Favoritos - Guia Turístico</title>
 </head>
 <body>
-    
+    <div class="content">
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="ondeir.html">Onde Ir</a>
+            <a href="favoritos.html" class="active">Favoritos</a>
+        </nav>
+
+        <h1>Meus Favoritos</h1>
+        <div id="lista-favoritos" aria-live="polite"></div>
+    </div>
+
     <script src="auth-navigation.js"></script>
+    <script src="favoritos.js"></script>
 </body>
 </html>
