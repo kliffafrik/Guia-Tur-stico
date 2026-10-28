@@ -13,13 +13,21 @@
         { id: 'nav-favoritos', label: 'Favoritos', href: 'favoritos.html' }
     ];
     mainLinks.forEach(({ id, label, href }) => {
-        let link = document.getElementById(id) || Array.from(document.querySelectorAll('a'))
-            .find(anchor => anchor.getAttribute('href') === href);
+        let linksInNav = Array.from(nav.querySelectorAll('a'));
+        let destino = new URL(href, window.location.href).pathname.toLowerCase();
+        let matchingLinks = linksInNav.filter(anchor =>
+            anchor.id === id ||
+            anchor.textContent.trim() === label ||
+            (anchor.getAttribute('href') &&
+                new URL(anchor.getAttribute('href'), window.location.href).pathname.toLowerCase() === destino)
+        );
+        let link = matchingLinks.shift();
         if (!link) {
             link = document.createElement('a');
             link.textContent = label;
             link.href = href;
         }
+        matchingLinks.forEach(duplicate => duplicate.remove());
         link.id = id;
         if (link.parentElement !== nav) nav.appendChild(link);
     });
@@ -51,15 +59,15 @@
 
     links.forEach(({ id, href, commonOnly, adminOnly, loggedOutOnly, loggedInOnly }) => {
         let link = document.getElementById(id);
-        if (isHomePage) return;
-
-        link.href = href;
         link.classList.toggle('hidden', commonOnly ? !usuarioLogado || usuarioLogado.tipo !== 'comum'
-            : adminOnly ? !usuarioLogado || usuarioLogado.tipo === 'comum'
+            : adminOnly ? !usuarioLogado || usuarioLogado.tipo !== 'admin1'
             : loggedOutOnly ? !!usuarioLogado
             : loggedInOnly ? !usuarioLogado
             : false);
 
+        if (isHomePage) return;
+
+        link.href = href;
         if (loggedInOnly) {
             link.onclick = () => sessionStorage.removeItem('usuarioLogado');
         }
