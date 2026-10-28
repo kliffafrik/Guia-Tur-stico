@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Meu Perfil - Guia Turístico</title>
+</head>
+<body>
+    <div class="content">
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="ondeir.html">Onde Ir</a>
+            <a href="favoritos.html">Favoritos</a>
+            <a href="perfil.html" id="nav-perfil" class="active hidden">Perfil</a>
+            <a href="index.html?painel-admin=1" id="nav-painel-admin" class="hidden">Painel Admin</a>
+            <a href="index.html?login=1" id="nav-login">Login / Admin</a>
+            <a href="index.html" id="nav-sair" class="hidden">Sair</a>
+        </nav>
+
+        <main id="perfil-conteudo" class="panel-container hidden">
+            <h1>Meu Perfil</h1>
+            <p><strong>Nome:</strong> <span id="perfil-nome"></span></p>
+            <p><strong>Usuário:</strong> <span id="perfil-usuario"></span></p>
+            <p><strong>E-mail:</strong> <span id="perfil-email"></span></p>
+            <p><strong>Cidade:</strong> <span id="perfil-cidade"></span></p>
+            <p><strong>Idade:</strong> <span id="perfil-idade"></span></p>
+            <p><strong>Identidade de gênero:</strong> <span id="perfil-identidade"></span></p>
+            <a href="index.html">Voltar à Home</a>
+        </main>
+    </div>
+
+    <script src="auth-navigation.js"></script>
+    <script>
+        let usuarioSalvo = sessionStorage.getItem('usuarioLogado');
+        let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+        let usuario = usuarios.find(item => item.user === usuarioSalvo);
+
+        if (!usuario || usuario.tipo !== 'comum') {
+            window.location.replace(usuario && usuario.tipo === 'admin1' ? 'index.html?painel-admin=1' : 'index.html?login=1');
+        } else {
+            document.getElementById('perfil-nome').textContent = usuario.nome || usuario.user;
+            document.getElementById('perfil-usuario').textContent = usuario.user;
+            document.getElementById('perfil-email').textContent = usuario.email || '-';
+            document.getElementById('perfil-cidade').textContent = usuario.cidade || '-';
+            document.getElementById('perfil-idade').textContent = usuario.idade ? usuario.idade + ' anos' : '-';
+            document.getElementById('perfil-identidade').textContent = usuario.identidadeGenero || usuario.sexo || '-';
+            document.getElementById('perfil-conteudo').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

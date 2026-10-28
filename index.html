@@ -13,10 +13,10 @@
             <a href="index.html" class="active" id="nav-home">Home</a>
             <a href="ondeir.html">Onde Ir</a>
             <a href="favoritos.html">Favoritos</a>
-            <a href="#" onclick="mostrarSecao('perfil'); return false;" id="nav-perfil" class="hidden">Perfil</a>
+            <a href="perfil.html" id="nav-perfil" class="hidden">Perfil</a>
             <a href="#" onclick="abrirPainelAdmin(); return false;" id="nav-painel-admin" class="hidden">Painel Admin</a>
             <a href="#" onclick="mostrarSecao('login')" id="nav-login">Login / Admin</a>
-            <a href="#" onclick="logout(); return false;" id="nav-sair" class="hidden">Sair</a>
+            <a href="index.html" id="nav-sair" class="hidden">Sair</a>
         </nav>
 
         <!-- SEU CONTEÚDO ORIGINAL INTACTO -->
@@ -108,19 +108,6 @@
             </p>
         </div>
 
-        <div id="secao-perfil" class="panel-container hidden">
-            <h2>Meu Perfil</h2>
-            <p><strong>Nome:</strong> <span id="perfil-nome"></span></p>
-            <p><strong>Usuário:</strong> <span id="perfil-usuario"></span></p>
-            <p><strong>E-mail:</strong> <span id="perfil-email"></span></p>
-            <p><strong>Cidade:</strong> <span id="perfil-cidade"></span></p>
-            <p><strong>Idade:</strong> <span id="perfil-idade"></span></p>
-            <p><strong>Identidade de gênero:</strong> <span id="perfil-identidade"></span></p>
-            <button onclick="mostrarSecao('home')">Voltar à Home</button>
-            <br><br>
-            <button style="background-color: #e53e3e;" onclick="logout()">Sair</button>
-        </div>
-
         <!-- PAINEL: ADMINISTRADOR 1 (Geral) -->
         <div id="painel-admin1" class="panel-container hidden" style="max-width: 800px;">
             <h2>Painel - Administrador 1</h2>
@@ -190,7 +177,6 @@
                 usuarioLogado = usuarios.find(u => u.user === usuarioSalvo) || null;
                 if (usuarioLogado) {
                     atualizarNavegacao();
-                    if (usuarioLogado.tipo === 'comum') atualizarPerfil();
                 } else {
                     sessionStorage.removeItem('usuarioLogado');
                 }
@@ -199,8 +185,6 @@
             let parametros = new URLSearchParams(window.location.search);
             if (parametros.has('login')) {
                 mostrarSecao('login');
-            } else if (parametros.has('perfil') && usuarioLogado && usuarioLogado.tipo === 'comum') {
-                mostrarSecao('perfil');
             } else if (parametros.has('painel-admin') && usuarioLogado && usuarioLogado.tipo !== 'comum') {
                 abrirPainelAdmin();
             }
@@ -211,7 +195,6 @@
             document.getElementById('secao-login').classList.add('hidden');
             document.getElementById('secao-cadastro').classList.add('hidden');
             document.getElementById('secao-recuperar').classList.add('hidden');
-            document.getElementById('secao-perfil').classList.add('hidden');
             document.getElementById('painel-admin1').classList.add('hidden');
             document.getElementById('painel-master').classList.add('hidden');
         }
@@ -219,13 +202,11 @@
         function mostrarSecao(secao) {
             esconderTodasSecoes();
             document.getElementById('nav-home').classList.toggle('active', secao === 'home');
-            document.getElementById('nav-perfil').classList.toggle('active', secao === 'perfil');
             document.getElementById('nav-painel-admin').classList.toggle('active', secao === 'admin1' || secao === 'master');
             if (secao === 'home') document.getElementById('secao-home').classList.remove('hidden');
             if (secao === 'login') document.getElementById('secao-login').classList.remove('hidden');
             if (secao === 'cadastro') document.getElementById('secao-cadastro').classList.remove('hidden');
             if (secao === 'recuperar') document.getElementById('secao-recuperar').classList.remove('hidden');
-            if (secao === 'perfil' && usuarioLogado) document.getElementById('secao-perfil').classList.remove('hidden');
             if (secao === 'admin1') {
                 document.getElementById('painel-admin1').classList.remove('hidden');
                 carregarUsuariosAdmin1();
@@ -258,7 +239,6 @@
                     alert('Login realizado com sucesso! Bem-vindo, ' + encontrado.user);
                     usuarioLogado = encontrado;
                     sessionStorage.setItem('usuarioLogado', encontrado.user);
-                    atualizarPerfil();
                     atualizarNavegacao();
                     mostrarSecao('home');
                 }
@@ -292,7 +272,6 @@
             localStorage.setItem('usuarios', JSON.stringify(usuarios));
             usuarioLogado = novoUsuario;
             sessionStorage.setItem('usuarioLogado', novoUsuario.user);
-            atualizarPerfil();
             atualizarNavegacao();
             mostrarSecao('home');
             alert('Cadastro realizado com sucesso! Bem-vindo, ' + novoUsuario.user);
@@ -471,15 +450,6 @@
                 alert('A senha do Admin 1 foi redefinida com sucesso pelo Admin Master!');
                 document.getElementById('master-nova-senha-admin1').value = '';
             }
-        }
-
-        function atualizarPerfil() {
-            document.getElementById('perfil-nome').innerText = usuarioLogado.nome || usuarioLogado.user;
-            document.getElementById('perfil-usuario').innerText = usuarioLogado.user;
-            document.getElementById('perfil-email').innerText = usuarioLogado.email || '-';
-            document.getElementById('perfil-cidade').innerText = usuarioLogado.cidade || '-';
-            document.getElementById('perfil-idade').innerText = usuarioLogado.idade ? usuarioLogado.idade + ' anos' : '-';
-            document.getElementById('perfil-identidade').innerText = usuarioLogado.identidadeGenero || usuarioLogado.sexo || '-';
         }
 
         function atualizarNavegacao() {
