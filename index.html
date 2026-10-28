@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Pontos Turísticos de Brasília!! - Home</title>
+    <title>Pontos Turísticos de Brasília - Home</title>
 </head>
 <body>
 
@@ -13,7 +13,10 @@
             <a href="index.html" class="active" id="nav-home">Home</a>
             <a href="ondeir.html">Onde Ir</a>
             <a href="favoritos.html">Favoritos</a>
+            <a href="#" onclick="mostrarSecao('perfil'); return false;" id="nav-perfil" class="hidden">Perfil</a>
+            <a href="#" onclick="abrirPainelAdmin(); return false;" id="nav-painel-admin" class="hidden">Painel Admin</a>
             <a href="#" onclick="mostrarSecao('login')" id="nav-login">Login / Admin</a>
+            <a href="#" onclick="logout(); return false;" id="nav-sair" class="hidden">Sair</a>
         </nav>
 
         <!-- SEU CONTEÚDO ORIGINAL INTACTO -->
@@ -105,6 +108,19 @@
             </p>
         </div>
 
+        <div id="secao-perfil" class="panel-container hidden">
+            <h2>Meu Perfil</h2>
+            <p><strong>Nome:</strong> <span id="perfil-nome"></span></p>
+            <p><strong>Usuário:</strong> <span id="perfil-usuario"></span></p>
+            <p><strong>E-mail:</strong> <span id="perfil-email"></span></p>
+            <p><strong>Cidade:</strong> <span id="perfil-cidade"></span></p>
+            <p><strong>Idade:</strong> <span id="perfil-idade"></span></p>
+            <p><strong>Identidade de gênero:</strong> <span id="perfil-identidade"></span></p>
+            <button onclick="mostrarSecao('home')">Voltar à Home</button>
+            <br><br>
+            <button style="background-color: #e53e3e;" onclick="logout()">Sair</button>
+        </div>
+
         <!-- PAINEL: ADMINISTRADOR 1 (Geral) -->
         <div id="painel-admin1" class="panel-container hidden" style="max-width: 800px;">
             <h2>Painel - Administrador 1</h2>
@@ -128,9 +144,6 @@
             <h3>Usuários Cadastrados (Quem é e de onde vem)</h3>
             <p style="font-size: 13px; color: #666;">Lista completa com os dados de perfil e opção para redefinir a senha:</p>
             <div id="lista-usuarios-admin" style="overflow-x: auto;"></div>
-
-            <br><br>
-            <button style="background-color: #e53e3e;" onclick="logout()">Sair</button>
         </div>
 
         <!-- PAINEL: ADMINISTRADOR MASTER -->
@@ -143,9 +156,6 @@
             <label>Nova senha para o Admin 1:</label>
             <input type="password" id="master-nova-senha-admin1" placeholder="Nova senha">
             <button onclick="masterResetAdmin1()">Redefinir Senha do Admin 1</button>
-
-            <br><br>
-            <button style="background-color: #e53e3e;" onclick="logout()">Sair</button>
         </div>
 
     </div>
@@ -165,12 +175,35 @@
             }));
         }
 
+        let usuarioLogado = null;
+
         window.onload = function() {
             let config = JSON.parse(localStorage.getItem('siteConfig'));
             document.getElementById('site-titulo').innerText = config.titulo;
             document.getElementById('site-subtitulo').innerText = config.subtitulo;
             document.getElementById('cfg-titulo').value = config.titulo;
             document.getElementById('cfg-subtitulo').value = config.subtitulo;
+
+            let usuarioSalvo = sessionStorage.getItem('usuarioLogado');
+            if (usuarioSalvo) {
+                let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+                usuarioLogado = usuarios.find(u => u.user === usuarioSalvo) || null;
+                if (usuarioLogado) {
+                    atualizarNavegacao();
+                    if (usuarioLogado.tipo === 'comum') atualizarPerfil();
+                } else {
+                    sessionStorage.removeItem('usuarioLogado');
+                }
+            }
+
+            let parametros = new URLSearchParams(window.location.search);
+            if (parametros.has('login')) {
+                mostrarSecao('login');
+            } else if (parametros.has('perfil') && usuarioLogado && usuarioLogado.tipo === 'comum') {
+                mostrarSecao('perfil');
+            } else if (parametros.has('painel-admin') && usuarioLogado && usuarioLogado.tipo !== 'comum') {
+                abrirPainelAdmin();
+            }
         };
 
         function esconderTodasSecoes() {
@@ -178,16 +211,21 @@
             document.getElementById('secao-login').classList.add('hidden');
             document.getElementById('secao-cadastro').classList.add('hidden');
             document.getElementById('secao-recuperar').classList.add('hidden');
+            document.getElementById('secao-perfil').classList.add('hidden');
             document.getElementById('painel-admin1').classList.add('hidden');
             document.getElementById('painel-master').classList.add('hidden');
         }
 
         function mostrarSecao(secao) {
             esconderTodasSecoes();
+            document.getElementById('nav-home').classList.toggle('active', secao === 'home');
+            document.getElementById('nav-perfil').classList.toggle('active', secao === 'perfil');
+            document.getElementById('nav-painel-admin').classList.toggle('active', secao === 'admin1' || secao === 'master');
             if (secao === 'home') document.getElementById('secao-home').classList.remove('hidden');
             if (secao === 'login') document.getElementById('secao-login').classList.remove('hidden');
             if (secao === 'cadastro') document.getElementById('secao-cadastro').classList.remove('hidden');
             if (secao === 'recuperar') document.getElementById('secao-recuperar').classList.remove('hidden');
+            if (secao === 'perfil' && usuarioLogado) document.getElementById('secao-perfil').classList.remove('hidden');
             if (secao === 'admin1') {
                 document.getElementById('painel-admin1').classList.remove('hidden');
                 carregarUsuariosAdmin1();
@@ -207,13 +245,22 @@
             if (encontrado) {
                 msgDiv.innerText = '';
                 if (encontrado.tipo === 'admin1') {
+                    usuarioLogado = encontrado;
+                    sessionStorage.setItem('usuarioLogado', encontrado.user);
+                    atualizarNavegacao();
                     mostrarSecao('admin1');
                 } else if (encontrado.tipo === 'master') {
+                    usuarioLogado = encontrado;
+                    sessionStorage.setItem('usuarioLogado', encontrado.user);
+                    atualizarNavegacao();
                     mostrarSecao('master');
                 } else {
                     alert('Login realizado com sucesso! Bem-vindo, ' + encontrado.user);
+                    usuarioLogado = encontrado;
+                    sessionStorage.setItem('usuarioLogado', encontrado.user);
+                    atualizarPerfil();
+                    atualizarNavegacao();
                     mostrarSecao('home');
-                    document.getElementById('nav-login').innerText = 'Olá, ' + encontrado.user;
                 }
             } else {
                 msgDiv.innerText = 'Usuário ou senha incorretos!';
@@ -240,10 +287,15 @@
                 return;
             }
 
-            usuarios.push({ user, nome, email, cidade, identidadeGenero, idade, pass, tipo: 'comum' });
+            let novoUsuario = { user, nome, email, cidade, identidadeGenero, idade, pass, tipo: 'comum' };
+            usuarios.push(novoUsuario);
             localStorage.setItem('usuarios', JSON.stringify(usuarios));
-            alert('Cadastro realizado com sucesso! Faça login.');
-            mostrarSecao('login');
+            usuarioLogado = novoUsuario;
+            sessionStorage.setItem('usuarioLogado', novoUsuario.user);
+            atualizarPerfil();
+            atualizarNavegacao();
+            mostrarSecao('home');
+            alert('Cadastro realizado com sucesso! Bem-vindo, ' + novoUsuario.user);
         }
 
         function atualizarOutraIdentidade() {
@@ -315,32 +367,54 @@
             }
 
             let html = '<table style="width:100%; font-size:13px; border-collapse: collapse; margin-top: 10px;">';
-            html += '<tr style="background:#edf2f7; text-align:left;"><th style="padding:6px;">Perfil (Quem é)</th><th style="padding:6px;">Local / Idade / Identidade de gênero</th><th style="padding:6px;">Alterar Senha</th></tr>';
+            html += '<tr style="background:#edf2f7; text-align:left;"><th style="padding:6px;">Perfil (Quem é)</th><th style="padding:6px;">Local / Idade / Identidade de gênero</th><th style="padding:6px;">Ações</th></tr>';
             
             comuns.forEach(u => {
+                let username = escaparHTML(u.user);
                 html += `<tr style="border-bottom: 1px solid #ddd;">
                     <td style="padding:8px;">
-                        <b>User:</b> ${u.user}<br>
-                        <b>Nome:</b> ${u.nome || '-'}<br>
-                        <b>E-mail:</b> ${u.email}
+                        <b>User:</b> ${username}<br>
+                        <b>Nome:</b> ${escaparHTML(u.nome || '-')}<br>
+                        <b>E-mail:</b> ${escaparHTML(u.email || '-')}
                     </td>
                     <td style="padding:8px;">
-                        <b>Cidade:</b> ${u.cidade || '-'}<br>
-                        <b>Idade:</b> ${u.idade || '-'} anos<br>
-                        <b>Identidade de gênero:</b> ${u.identidadeGenero || u.sexo || '-'}
+                        <b>Cidade:</b> ${escaparHTML(u.cidade || '-')}<br>
+                        <b>Idade:</b> ${escaparHTML(u.idade || '-')} anos<br>
+                        <b>Identidade de gênero:</b> ${escaparHTML(u.identidadeGenero || u.sexo || '-')}
                     </td>
                     <td style="padding:8px;">
-                        <input type="password" id="nova-senha-${u.user}" placeholder="Nova senha" style="width:110px; padding:5px; margin-bottom:4px; display:block; border:1px solid #ccc; border-radius:4px;">
-                        <button onclick="admin1MudarSenhaUsuario('${u.user}')" style="width:auto; padding:5px 10px; font-size:11px; background-color:#3182ce; color:white; border:none; border-radius:4px; cursor:pointer;">Salvar Senha</button>
+                        <input type="password" class="nova-senha-usuario" placeholder="Nova senha" style="width:110px; padding:5px; margin-bottom:4px; display:block; border:1px solid #ccc; border-radius:4px;">
+                        <button type="button" data-acao="alterar-senha" data-usuario="${username}" style="width:auto; padding:5px 10px; font-size:11px; background-color:#3182ce; color:white; border:none; border-radius:4px; cursor:pointer;">Salvar Senha</button>
+                        <button type="button" data-acao="excluir-usuario" data-usuario="${username}" style="width:auto; padding:5px 10px; margin-top:4px; font-size:11px; background-color:#e53e3e; color:white; border:none; border-radius:4px; cursor:pointer;">Excluir Conta</button>
                     </td>
                 </tr>`;
             });
             html += '</table>';
             container.innerHTML = html;
+            container.onclick = function(event) {
+                let botao = event.target.closest('button[data-acao]');
+                if (!botao) return;
+
+                let linha = botao.closest('tr');
+                if (botao.dataset.acao === 'alterar-senha') {
+                    admin1MudarSenhaUsuario(botao.dataset.usuario, linha.querySelector('.nova-senha-usuario'));
+                } else if (botao.dataset.acao === 'excluir-usuario') {
+                    admin1ExcluirUsuario(botao.dataset.usuario);
+                }
+            };
         }
 
-        function admin1MudarSenhaUsuario(username) {
-            let inputSenha = document.getElementById(`nova-senha-${username}`);
+        function escaparHTML(valor) {
+            return String(valor).replace(/[&<>"']/g, caractere => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[caractere]);
+        }
+
+        function admin1MudarSenhaUsuario(username, inputSenha) {
             let novaSenha = inputSenha.value;
 
             if (!novaSenha) {
@@ -360,6 +434,29 @@
             }
         }
 
+        function admin1ExcluirUsuario(username) {
+            if (!usuarioLogado || usuarioLogado.tipo !== 'admin1') {
+                alert('Apenas o Administrador 1 pode excluir contas.');
+                return;
+            }
+            if (!confirm(`Tem certeza que deseja excluir a conta de ${username}? Esta ação não pode ser desfeita.`)) {
+                return;
+            }
+
+            let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+            let usuarioExiste = usuarios.some(usuario => usuario.user === username && usuario.tipo === 'comum');
+            if (!usuarioExiste) {
+                alert('Esta conta não foi encontrada.');
+                carregarUsuariosAdmin1();
+                return;
+            }
+
+            usuarios = usuarios.filter(usuario => !(usuario.user === username && usuario.tipo === 'comum'));
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            alert(`A conta de ${username} foi excluída.`);
+            carregarUsuariosAdmin1();
+        }
+
         function masterResetAdmin1() {
             let novaSenha = document.getElementById('master-nova-senha-admin1').value;
             if (!novaSenha) {
@@ -376,10 +473,37 @@
             }
         }
 
+        function atualizarPerfil() {
+            document.getElementById('perfil-nome').innerText = usuarioLogado.nome || usuarioLogado.user;
+            document.getElementById('perfil-usuario').innerText = usuarioLogado.user;
+            document.getElementById('perfil-email').innerText = usuarioLogado.email || '-';
+            document.getElementById('perfil-cidade').innerText = usuarioLogado.cidade || '-';
+            document.getElementById('perfil-idade').innerText = usuarioLogado.idade ? usuarioLogado.idade + ' anos' : '-';
+            document.getElementById('perfil-identidade').innerText = usuarioLogado.identidadeGenero || usuarioLogado.sexo || '-';
+        }
+
+        function atualizarNavegacao() {
+            document.getElementById('nav-perfil').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo !== 'comum');
+            document.getElementById('nav-painel-admin').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo === 'comum');
+            document.getElementById('nav-login').classList.toggle('hidden', !!usuarioLogado);
+            document.getElementById('nav-sair').classList.toggle('hidden', !usuarioLogado);
+        }
+
+        function abrirPainelAdmin() {
+            if (usuarioLogado && usuarioLogado.tipo === 'admin1') {
+                mostrarSecao('admin1');
+            } else if (usuarioLogado && usuarioLogado.tipo === 'master') {
+                mostrarSecao('master');
+            }
+        }
+
         function logout() {
+            usuarioLogado = null;
+            sessionStorage.removeItem('usuarioLogado');
+            atualizarNavegacao();
             mostrarSecao('home');
-            document.getElementById('nav-login').innerText = 'Login / Admin';
         }
     </script>
+    <script src="auth-navigation.js"></script>
 </body>
 </html>
