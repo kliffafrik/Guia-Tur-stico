@@ -11,16 +11,17 @@ body {
 }
 
 /* ==========================================
-   CABEÇALHO E BLOCOS DE CONTEÚDO
+   CABEÇALHO E BLOCOS DE CONTEÚDO (CONTAINER)
    ========================================== */
-div {
-    width: 80%;
+.content {
+    width: 90%;
     max-width: 1000px;
     margin: 25px auto; 
     padding: 30px;
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra suave estilo moderno */
+    box-sizing: border-radius;
 }
 
 /* ==========================================
@@ -85,7 +86,7 @@ p {
 }
 
 /* ==========================================
-   IMAGENS (AJUSTADO PARA NÃO FICAR GIGANTE)
+   IMAGENS
    ========================================== */
 .img-turismo {
     display: block;
@@ -111,6 +112,7 @@ p {
     border-radius: 8px;
     background: #f7fafc;
     text-align: left;
+    box-shadow: none;
 }
 
 .auth-container input, .panel-container input, .panel-container select {
@@ -163,7 +165,10 @@ p {
     font-size: 14px; 
     margin-bottom: 10px; 
 }
-/* Estilo para a Seção Hero da Página Inicial */
+
+/* ==========================================
+   SEÇÃO HERO (LARGURA TOTAL DENTRO DA TELA)
+   ========================================== */
 .hero-banner {
     position: relative;
     background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('hero_bg.jpg');
@@ -171,20 +176,31 @@ p {
     background-position: center;
     color: white;
     text-align: center;
-    padding: 80px 20px;
+    padding: 100px 20px;
     border-radius: 8px;
     margin: 20px 0;
+    box-shadow: none;
 }
 
 .hero-banner h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     margin-bottom: 10px;
     color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+
+.hero-banner h2 {
+    color: #f0f0f0;
+    border: none;
+    padding: 0;
+    margin-top: 0;
+    font-weight: normal;
 }
 
 .hero-banner p {
     font-size: 1.1rem;
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 650px;
+    margin: 15px auto 0 auto;
     color: #f0f0f0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
