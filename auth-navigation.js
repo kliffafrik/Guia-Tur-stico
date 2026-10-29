@@ -67,8 +67,9 @@
 
     window.refreshAuthNavigation = async function() {
         const supabase = await carregarClienteSupabase();
-        const { data: { user }, error } = await supabase.auth.getUser();
+        const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
+        const user = session?.user || null;
 
         let profile = null;
         let isAdmin = false;
