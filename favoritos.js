@@ -17,7 +17,7 @@
         'memorial_jk.html': 'Memorial JK',
         'memorial_dos_povos_indigenas.html': 'Memorial dos Povos Indígenas',
         'espaco_cultural_renato_russo.html': 'Espaço Cultural Renato Russo',
-        'ccbb_brasilia.html': 'Centro Cultural Banco do Brasil (CCBB Brasília)',
+        'centro_cultural_banco_do_brasil.html': 'Centro Cultural Banco do Brasil (CCBB Brasília)',
         'clube_do_choro_de_brasilia.html': 'Clube do Choro de Brasília',
 
         // --- Taguatinga ---
