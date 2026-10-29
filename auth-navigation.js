@@ -1,4 +1,5 @@
 (() => {
+    const scriptUrl = document.currentScript.src;
     let nav = document.querySelector('nav');
     if (!nav) {
         let container = document.querySelector('.content') || document.body;
@@ -49,35 +50,81 @@
         }
     });
 
-    let usuarioLogado = null;
-    let usuarioSalvo = sessionStorage.getItem('usuarioLogado');
-    if (usuarioSalvo) {
-        let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
-        usuarioLogado = usuarios.find(usuario => usuario.user === usuarioSalvo) || null;
-        if (!usuarioLogado) sessionStorage.removeItem('usuarioLogado');
-    }
-
-    links.forEach(({ id, href, commonOnly, adminOnly, loggedOutOnly, loggedInOnly }) => {
-        let link = document.getElementById(id);
-        link.classList.toggle('hidden', commonOnly ? !usuarioLogado || usuarioLogado.tipo !== 'comum'
-            : adminOnly ? !usuarioLogado || usuarioLogado.tipo !== 'admin1'
-            : loggedOutOnly ? !!usuarioLogado
-            : loggedInOnly ? !usuarioLogado
-            : false);
-
-        if (id === 'nav-perfil') link.href = href;
-        link.classList.toggle('active', id === 'nav-perfil' && /perfil\.html$/i.test(window.location.pathname));
-        if (loggedInOnly) {
-            link.href = href;
-            link.removeAttribute('onclick');
-            link.addEventListener('click', event => {
-                event.preventDefault();
-                sessionStorage.removeItem('usuarioLogado');
-                window.location.assign(href);
+    async function carregarClienteSupabase() {
+        if (!window.supabaseReady) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = new URL('supabase-client.js', scriptUrl).href;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('Não foi possível carregar o cliente Supabase.'));
+                document.head.appendChild(script);
             });
         }
-        if (isHomePage) return;
+        return window.supabaseReady;
+    }
 
-        link.href = href;
+    window.appAuth = { user: null, profile: null, isAdmin: false };
+
+    window.refreshAuthNavigation = async function() {
+        const supabase = await carregarClienteSupabase();
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+
+        let profile = null;
+        let isAdmin = false;
+        if (user) {
+            const { data } = await supabase
+                .from('profiles')
+                .select('id, username, full_name, email, city, age, gender_identity, created_at')
+                .eq('id', user.id)
+                .maybeSingle();
+            profile = data;
+
+            const { data: adminResult } = await supabase.rpc('is_site_admin');
+            isAdmin = adminResult === true;
+        }
+
+        window.appAuth = { user, profile, isAdmin };
+        links.forEach(({ id, href, commonOnly, adminOnly, loggedOutOnly, loggedInOnly }) => {
+            const link = document.getElementById(id);
+            link.classList.toggle('hidden', commonOnly ? !user || isAdmin
+                : adminOnly ? !user || !isAdmin
+                : loggedOutOnly ? !!user
+                : loggedInOnly ? !user
+                : false);
+            link.href = href;
+            if (id === 'nav-perfil') {
+                link.classList.toggle('active', /perfil\.html$/i.test(window.location.pathname));
+            }
+        });
+
+        return window.appAuth;
+    };
+
+    const logoutLink = document.getElementById('nav-sair');
+    logoutLink.addEventListener('click', async event => {
+        event.preventDefault();
+        const supabase = await carregarClienteSupabase();
+        await supabase.auth.signOut();
+        await window.refreshAuthNavigation();
+        window.location.assign('index.html');
     });
+
+    window.authNavigationReady = window.refreshAuthNavigation().catch(error => {
+        console.error('Falha ao carregar autenticação:', error);
+        links.forEach(({ id }) => document.getElementById(id).classList.add('hidden'));
+        throw error;
+    });
+
+    window.authNavigationReady.then(async () => {
+        const supabase = await carregarClienteSupabase();
+        supabase.auth.onAuthStateChange(event => {
+            if (event === 'PASSWORD_RECOVERY') {
+                window.dispatchEvent(new Event('app-password-recovery'));
+            }
+            if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
+                setTimeout(() => window.refreshAuthNavigation().catch(console.error), 0);
+            }
+        });
+    }).catch(() => {});
 })();

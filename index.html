@@ -34,8 +34,8 @@
             <h2>Entrar no Sistema</h2>
             <div id="login-msg" class="alert-msg"></div>
             <form onsubmit="realizarLogin(event)">
-                <label>Usuário ou E-mail:</label>
-                <input type="text" id="login-user" required>
+                <label>E-mail:</label>
+                <input type="email" id="login-user" required autocomplete="email">
                 
                 <label>Senha:</label>
                 <input type="password" id="login-pass" required>
@@ -84,7 +84,7 @@
                 <input type="number" id="cad-idade" min="1" max="120" required>
 
                 <label>Senha:</label>
-                <input type="password" id="cad-pass" required>
+                <input type="password" id="cad-pass" minlength="8" autocomplete="new-password" required>
                 
                 <button type="submit">Cadastrar</button>
             </form>
@@ -99,8 +99,8 @@
             <p style="font-size: 14px; color: #666;">Se você for usuário comum, informe seu e-mail. Se você for o **Admin 1**, solicite ao **Admin Master** para redefinir sua senha.</p>
             <div id="rec-msg"></div>
             <form onsubmit="recuperarSenha(event)">
-                <label>E-mail ou Usuário:</label>
-                <input type="text" id="rec-input" required>
+                <label>E-mail cadastrado:</label>
+                <input type="email" id="rec-input" required autocomplete="email">
                 <button type="submit">Recuperar Senha</button>
             </form>
             <p style="text-align: center; margin-top: 15px;">
@@ -108,173 +108,141 @@
             </p>
         </div>
 
+        <div id="secao-nova-senha" class="auth-container hidden">
+            <h2>Definir Nova Senha</h2>
+            <div id="nova-senha-msg" class="alert-msg"></div>
+            <form onsubmit="definirNovaSenha(event)">
+                <label for="nova-senha">Nova senha:</label>
+                <input type="password" id="nova-senha" minlength="8" autocomplete="new-password" required>
+                <label for="nova-senha-confirmacao">Confirme a nova senha:</label>
+                <input type="password" id="nova-senha-confirmacao" minlength="8" autocomplete="new-password" required>
+                <button type="submit">Salvar Nova Senha</button>
+            </form>
+        </div>
+
         <!-- PAINEL: ADMINISTRADOR 1 (Geral) -->
         <div id="painel-admin1" class="panel-container hidden" style="max-width: 800px;">
             <h2>Painel - Administrador 1</h2>
-            <p>Bem-vindo, <b>Admin 1</b>. Você pode alterar configurações do site, sua senha e gerenciar os usuários cadastrados.</p>
-            
-            <hr style="margin: 15px 0;">
-            <h3>Configurações do Site</h3>
-            <label>Título do Site:</label>
-            <input type="text" id="cfg-titulo" value="Guia Turístico">
-            <label>Subtítulo:</label>
-            <input type="text" id="cfg-subtitulo" value="Distrito Federal, Brasil">
-            <button onclick="salvarConfiguracoes()">Salvar Alterações</button>
-
-            <hr style="margin: 20px 0;">
-            <h3>Alterar Minha Senha</h3>
-            <label>Nova Senha:</label>
-            <input type="password" id="admin1-nova-senha" placeholder="Digite sua nova senha">
-            <button onclick="alterarSenhaAdmin1()">Atualizar Minha Senha</button>
-
-            <hr style="margin: 20px 0;">
+            <p>Lista de perfis cadastrados.</p>
             <h3>Usuários Cadastrados (Quem é e de onde vem)</h3>
-            <p style="font-size: 13px; color: #666;">Lista completa com os dados de perfil e opção para redefinir a senha:</p>
             <div id="lista-usuarios-admin" style="overflow-x: auto;"></div>
-        </div>
-
-        <!-- PAINEL: ADMINISTRADOR MASTER -->
-        <div id="painel-master" class="panel-container hidden">
-            <h2>Painel - Administrador Master</h2>
-            <p>Controle supremo do site. Caso o Administrador 1 esqueça a senha, você pode redefini-la abaixo.</p>
-            
-            <hr style="margin: 15px 0;">
-            <h3>Redefinir Senha do Admin 1</h3>
-            <label>Nova senha para o Admin 1:</label>
-            <input type="password" id="master-nova-senha-admin1" placeholder="Nova senha">
-            <button onclick="masterResetAdmin1()">Redefinir Senha do Admin 1</button>
         </div>
 
     </div>
 
     <!-- SCRIPT DE CONTROLE DO SISTEMA -->
     <script>
-        if (!localStorage.getItem('usuarios')) {
-            localStorage.setItem('usuarios', JSON.stringify([
-                { user: 'admin1', pass: 'admin123', tipo: 'admin1', email: 'admin1@site.com', nome: 'Administrador Geral', cidade: 'Brasília - DF', sexo: 'N/A', idade: '--' },
-                { user: 'adminmaster', pass: 'master123', tipo: 'master', email: 'master@site.com', nome: 'Administrador Master', cidade: 'Brasília - DF', sexo: 'N/A', idade: '--' }
-            ]));
-        }
-        if (!localStorage.getItem('siteConfig')) {
-            localStorage.setItem('siteConfig', JSON.stringify({
-                titulo: 'Guia Turístico',
-                subtitulo: 'Distrito Federal, Brasil'
-            }));
-        }
-
         let usuarioLogado = null;
 
-        window.onload = function() {
-            let config = JSON.parse(localStorage.getItem('siteConfig'));
-            document.getElementById('site-titulo').innerText = config.titulo;
-            document.getElementById('site-subtitulo').innerText = config.subtitulo;
-            document.getElementById('cfg-titulo').value = config.titulo;
-            document.getElementById('cfg-subtitulo').value = config.subtitulo;
-
-            let usuarioSalvo = sessionStorage.getItem('usuarioLogado');
-            if (usuarioSalvo) {
-                let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-                usuarioLogado = usuarios.find(u => u.user === usuarioSalvo) || null;
-                if (usuarioLogado) {
-                    atualizarNavegacao();
-                } else {
-                    sessionStorage.removeItem('usuarioLogado');
-                }
-            }
-
+        window.onload = async function() {
+            try {
+                await window.supabaseReady;
+                const auth = await window.refreshAuthNavigation();
+                usuarioLogado = auth.profile ? {
+                    ...auth.profile,
+                    tipo: auth.isAdmin ? 'admin1' : 'comum',
+                    email: auth.user.email
+                } : null;
             let parametros = new URLSearchParams(window.location.search);
-            if (parametros.has('login')) {
+                if (parametros.has('redefinir')) {
+                    mostrarSecao('nova-senha');
+                } else if (parametros.has('login')) {
                 mostrarSecao('login');
-            } else if (parametros.has('painel-admin') && usuarioLogado && usuarioLogado.tipo !== 'comum') {
-                abrirPainelAdmin();
+                } else if (parametros.has('painel-admin')) {
+                    abrirPainelAdmin();
+                }
+            } catch (error) {
+                console.error('Falha ao iniciar o Supabase:', error);
+                const mensagem = document.getElementById('login-msg');
+                if (mensagem) mensagem.textContent = 'Não foi possível conectar ao serviço de contas. Tente novamente mais tarde.';
             }
         };
+
+        window.addEventListener('app-password-recovery', () => mostrarSecao('nova-senha'));
 
         function esconderTodasSecoes() {
             document.getElementById('secao-home').classList.add('hidden');
             document.getElementById('secao-login').classList.add('hidden');
             document.getElementById('secao-cadastro').classList.add('hidden');
             document.getElementById('secao-recuperar').classList.add('hidden');
+            document.getElementById('secao-nova-senha').classList.add('hidden');
             document.getElementById('painel-admin1').classList.add('hidden');
-            document.getElementById('painel-master').classList.add('hidden');
         }
 
         function mostrarSecao(secao) {
+            if (secao === 'admin1' && !window.appAuth?.isAdmin) secao = 'login';
             esconderTodasSecoes();
             document.getElementById('nav-home').classList.toggle('active', secao === 'home');
-            document.getElementById('nav-painel-admin').classList.toggle('active', secao === 'admin1' || secao === 'master');
+            document.getElementById('nav-painel-admin').classList.toggle('active', secao === 'admin1');
             if (secao === 'home') document.getElementById('secao-home').classList.remove('hidden');
             if (secao === 'login') document.getElementById('secao-login').classList.remove('hidden');
             if (secao === 'cadastro') document.getElementById('secao-cadastro').classList.remove('hidden');
             if (secao === 'recuperar') document.getElementById('secao-recuperar').classList.remove('hidden');
+            if (secao === 'nova-senha') document.getElementById('secao-nova-senha').classList.remove('hidden');
             if (secao === 'admin1') {
                 document.getElementById('painel-admin1').classList.remove('hidden');
                 carregarUsuariosAdmin1();
             }
-            if (secao === 'master') document.getElementById('painel-master').classList.remove('hidden');
         }
 
-        function realizarLogin(event) {
+        async function realizarLogin(event) {
             event.preventDefault();
-            let usuarioInput = document.getElementById('login-user').value;
-            let senhaInput = document.getElementById('login-pass').value;
-            let msgDiv = document.getElementById('login-msg');
+            const email = document.getElementById('login-user').value.trim();
+            const password = document.getElementById('login-pass').value;
+            const msgDiv = document.getElementById('login-msg');
+            const supabase = await window.supabaseReady;
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-            let encontrado = usuarios.find(u => (u.user === usuarioInput || u.email === usuarioInput) && u.pass === senhaInput);
-
-            if (encontrado) {
-                msgDiv.innerText = '';
-                if (encontrado.tipo === 'admin1') {
-                    usuarioLogado = encontrado;
-                    sessionStorage.setItem('usuarioLogado', encontrado.user);
-                    atualizarNavegacao();
-                    mostrarSecao('admin1');
-                } else if (encontrado.tipo === 'master') {
-                    usuarioLogado = encontrado;
-                    sessionStorage.setItem('usuarioLogado', encontrado.user);
-                    atualizarNavegacao();
-                    mostrarSecao('master');
-                } else {
-                    alert('Login realizado com sucesso! Bem-vindo, ' + encontrado.user);
-                    usuarioLogado = encontrado;
-                    sessionStorage.setItem('usuarioLogado', encontrado.user);
-                    atualizarNavegacao();
-                    mostrarSecao('home');
-                }
-            } else {
-                msgDiv.innerText = 'Usuário ou senha incorretos!';
-            }
-        }
-
-        function realizarCadastro(event) {
-            event.preventDefault();
-            let user = document.getElementById('cad-user').value;
-            let nome = document.getElementById('cad-nome-completo').value;
-            let email = document.getElementById('cad-email').value;
-            let cidade = document.getElementById('cad-cidade').value;
-            let identidadeGenero = document.getElementById('cad-identidade-genero').value;
-            if (identidadeGenero === 'Outra identidade') {
-                identidadeGenero = document.getElementById('cad-outra-identidade').value.trim() || identidadeGenero;
-            }
-            let idade = document.getElementById('cad-idade').value;
-            let pass = document.getElementById('cad-pass').value;
-            let msgDiv = document.getElementById('cad-msg');
-
-            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-            if (usuarios.some(u => u.user === user || u.email === email)) {
-                msgDiv.innerText = 'Usuário ou e-mail já cadastrados!';
+            if (error) {
+                msgDiv.textContent = 'E-mail ou senha incorretos.';
                 return;
             }
 
-            let novoUsuario = { user, nome, email, cidade, identidadeGenero, idade, pass, tipo: 'comum' };
-            usuarios.push(novoUsuario);
-            localStorage.setItem('usuarios', JSON.stringify(usuarios));
-            usuarioLogado = novoUsuario;
-            sessionStorage.setItem('usuarioLogado', novoUsuario.user);
-            atualizarNavegacao();
-            mostrarSecao('home');
-            alert('Cadastro realizado com sucesso! Bem-vindo, ' + novoUsuario.user);
+            const auth = await window.refreshAuthNavigation();
+            usuarioLogado = auth.profile ? { ...auth.profile, tipo: auth.isAdmin ? 'admin1' : 'comum' } : null;
+            msgDiv.textContent = '';
+            mostrarSecao(auth.isAdmin ? 'admin1' : 'home');
+        }
+
+        async function realizarCadastro(event) {
+            event.preventDefault();
+            const username = document.getElementById('cad-user').value.trim().toLowerCase();
+            const fullName = document.getElementById('cad-nome-completo').value.trim();
+            const email = document.getElementById('cad-email').value.trim();
+            const city = document.getElementById('cad-cidade').value.trim();
+            let genderIdentity = document.getElementById('cad-identidade-genero').value;
+            if (genderIdentity === 'Outra identidade') {
+                genderIdentity = document.getElementById('cad-outra-identidade').value.trim() || genderIdentity;
+            }
+            const age = Number(document.getElementById('cad-idade').value);
+            const password = document.getElementById('cad-pass').value;
+            const msgDiv = document.getElementById('cad-msg');
+            const supabase = await window.supabaseReady;
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: new URL('index.html', window.location.origin).href,
+                    data: { username, full_name: fullName, city, age, gender_identity: genderIdentity }
+                }
+            });
+
+            if (error) {
+                msgDiv.textContent = error.message.includes('duplicate key')
+                    ? 'Esse nome de usuário já está em uso.'
+                    : 'Não foi possível concluir o cadastro. Confira os dados e tente novamente.';
+                return;
+            }
+
+            event.target.reset();
+            if (data.session) {
+                const auth = await window.refreshAuthNavigation();
+                usuarioLogado = auth.profile ? { ...auth.profile, tipo: 'comum' } : null;
+                msgDiv.textContent = 'Conta criada com sucesso.';
+                mostrarSecao('home');
+            } else {
+                msgDiv.textContent = 'Cadastro recebido. Confira seu e-mail e confirme a conta para entrar.';
+            }
         }
 
         function atualizarOutraIdentidade() {
@@ -287,190 +255,115 @@
             if (!mostrarCampo) campo.value = '';
         }
 
-        function recuperarSenha(event) {
+        async function recuperarSenha(event) {
             event.preventDefault();
-            let val = document.getElementById('rec-input').value;
-            let recMsg = document.getElementById('rec-msg');
-            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-            let usuario = usuarios.find(u => u.user === val || u.email === val);
-
-            if (usuario) {
-                if (usuario.tipo === 'admin1') {
-                    recMsg.innerHTML = '<span class="alert-msg">Esta conta é do Administrador 1. Por segurança, apenas o **Admin Master** pode redefinir esta senha.</span>';
-                } else if (usuario.tipo === 'master') {
-                    recMsg.innerHTML = '<span class="alert-msg">Entre em contato com o suporte técnico para recuperar a senha do Admin Master.</span>';
-                } else {
-                    recMsg.innerHTML = `<span class="success-msg">Sua senha é: <b>${usuario.pass}</b></span>`;
-                }
-            } else {
-                recMsg.innerHTML = '<span class="alert-msg">Usuário ou e-mail não encontrados.</span>';
-            }
-        }
-
-        function salvarConfiguracoes() {
-            let titulo = document.getElementById('cfg-titulo').value;
-            let subtitulo = document.getElementById('cfg-subtitulo').value;
-
-            let config = { titulo, subtitulo };
-            localStorage.setItem('siteConfig', JSON.stringify(config));
-
-            document.getElementById('site-titulo').innerText = titulo;
-            document.getElementById('site-subtitulo').innerText = subtitulo;
-            alert('Configurações salvas com sucesso!');
-        }
-
-        function alterarSenhaAdmin1() {
-            let novaSenha = document.getElementById('admin1-nova-senha').value;
-            if (!novaSenha) {
-                alert('Digite a nova senha.');
-                return;
-            }
-            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-            let adm = usuarios.find(u => u.tipo === 'admin1');
-            if (adm) {
-                adm.pass = novaSenha;
-                localStorage.setItem('usuarios', JSON.stringify(usuarios));
-                alert('Senha do Admin 1 alterada com sucesso!');
-                document.getElementById('admin1-nova-senha').value = '';
-            }
-        }
-
-        function carregarUsuariosAdmin1() {
-            let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-            let container = document.getElementById('lista-usuarios-admin');
-            let comuns = usuarios.filter(u => u.tipo === 'comum');
-
-            if (comuns.length === 0) {
-                container.innerHTML = '<p style="font-size: 14px; color: #888;">Nenhum usuário comum cadastrado ainda.</p>';
-                return;
-            }
-
-            let html = '<table style="width:100%; font-size:13px; border-collapse: collapse; margin-top: 10px;">';
-            html += '<tr style="background:#edf2f7; text-align:left;"><th style="padding:6px;">Perfil (Quem é)</th><th style="padding:6px;">Local / Idade / Identidade de gênero</th><th style="padding:6px;">Ações</th></tr>';
-            
-            comuns.forEach(u => {
-                let username = escaparHTML(u.user);
-                html += `<tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding:8px;">
-                        <b>User:</b> ${username}<br>
-                        <b>Nome:</b> ${escaparHTML(u.nome || '-')}<br>
-                        <b>E-mail:</b> ${escaparHTML(u.email || '-')}
-                    </td>
-                    <td style="padding:8px;">
-                        <b>Cidade:</b> ${escaparHTML(u.cidade || '-')}<br>
-                        <b>Idade:</b> ${escaparHTML(u.idade || '-')} anos<br>
-                        <b>Identidade de gênero:</b> ${escaparHTML(u.identidadeGenero || u.sexo || '-')}
-                    </td>
-                    <td style="padding:8px;">
-                        <input type="password" class="nova-senha-usuario" placeholder="Nova senha" style="width:110px; padding:5px; margin-bottom:4px; display:block; border:1px solid #ccc; border-radius:4px;">
-                        <button type="button" data-acao="alterar-senha" data-usuario="${username}" style="width:auto; padding:5px 10px; font-size:11px; background-color:#3182ce; color:white; border:none; border-radius:4px; cursor:pointer;">Salvar Senha</button>
-                        <button type="button" data-acao="excluir-usuario" data-usuario="${username}" style="width:auto; padding:5px 10px; margin-top:4px; font-size:11px; background-color:#e53e3e; color:white; border:none; border-radius:4px; cursor:pointer;">Excluir Conta</button>
-                    </td>
-                </tr>`;
+            const email = document.getElementById('rec-input').value.trim();
+            const recMsg = document.getElementById('rec-msg');
+            const supabase = await window.supabaseReady;
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: new URL('index.html?redefinir=1', window.location.origin).href
             });
-            html += '</table>';
-            container.innerHTML = html;
-            container.onclick = function(event) {
-                let botao = event.target.closest('button[data-acao]');
-                if (!botao) return;
 
-                let linha = botao.closest('tr');
-                if (botao.dataset.acao === 'alterar-senha') {
-                    admin1MudarSenhaUsuario(botao.dataset.usuario, linha.querySelector('.nova-senha-usuario'));
-                } else if (botao.dataset.acao === 'excluir-usuario') {
-                    admin1ExcluirUsuario(botao.dataset.usuario);
-                }
-            };
+            recMsg.textContent = error
+                ? 'Não foi possível enviar o e-mail de recuperação. Confira o endereço e tente novamente.'
+                : 'Se houver uma conta com esse e-mail, você receberá um link para redefinir a senha.';
         }
 
-        function escaparHTML(valor) {
-            return String(valor).replace(/[&<>"']/g, caractere => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            })[caractere]);
+        async function definirNovaSenha(event) {
+            event.preventDefault();
+            const password = document.getElementById('nova-senha').value;
+            const confirmation = document.getElementById('nova-senha-confirmacao').value;
+            const message = document.getElementById('nova-senha-msg');
+            if (password !== confirmation) {
+                message.textContent = 'As senhas não coincidem.';
+                return;
+            }
+
+            const supabase = await window.supabaseReady;
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) {
+                message.textContent = 'Não foi possível atualizar a senha. Solicite um novo link de recuperação.';
+                return;
+            }
+
+            await supabase.auth.signOut();
+            await window.refreshAuthNavigation();
+            document.getElementById('nova-senha').value = '';
+            document.getElementById('nova-senha-confirmacao').value = '';
+            document.getElementById('login-msg').textContent = 'Senha atualizada. Entre com sua nova senha.';
+            mostrarSecao('login');
         }
 
-        function admin1MudarSenhaUsuario(username, inputSenha) {
-            let novaSenha = inputSenha.value;
-
-            if (!novaSenha) {
-                alert('Digite a nova senha para o usuário ' + username);
+        async function carregarUsuariosAdmin1() {
+            const container = document.getElementById('lista-usuarios-admin');
+            if (!window.appAuth?.isAdmin) {
+                container.textContent = 'Acesso restrito ao Admin 1.';
                 return;
             }
 
-            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-            let usuario = usuarios.find(u => u.user === username);
-
-            if (usuario) {
-                usuario.pass = novaSenha;
-                localStorage.setItem('usuarios', JSON.stringify(usuarios));
-                alert(`Senha do usuário ${username} alterada com sucesso!`);
-                inputSenha.value = '';
-                carregarUsuariosAdmin1();
-            }
-        }
-
-        function admin1ExcluirUsuario(username) {
-            if (!usuarioLogado || usuarioLogado.tipo !== 'admin1') {
-                alert('Apenas o Administrador 1 pode excluir contas.');
+            const supabase = await window.supabaseReady;
+            const { data: users, error } = await supabase
+                .from('profiles')
+                .select('username, full_name, email, city, age, gender_identity, created_at')
+                .neq('id', window.appAuth.user.id)
+                .order('created_at', { ascending: false });
+            if (error) {
+                container.textContent = 'Não foi possível carregar os perfis. Tente novamente.';
                 return;
             }
-            if (!confirm(`Tem certeza que deseja excluir a conta de ${username}? Esta ação não pode ser desfeita.`)) {
+            if (!users.length) {
+                container.textContent = 'Nenhum usuário cadastrado ainda.';
                 return;
             }
 
-            let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
-            let usuarioExiste = usuarios.some(usuario => usuario.user === username && usuario.tipo === 'comum');
-            if (!usuarioExiste) {
-                alert('Esta conta não foi encontrada.');
-                carregarUsuariosAdmin1();
-                return;
-            }
+            const table = document.createElement('table');
+            table.style.cssText = 'width:100%; font-size:13px; border-collapse:collapse; margin-top:10px;';
+            const header = document.createElement('tr');
+            ['Usuário e perfil', 'E-mail', 'Cidade', 'Idade', 'Identidade de gênero'].forEach(label => {
+                const cell = document.createElement('th');
+                cell.textContent = label;
+                cell.style.cssText = 'padding:8px; background:#edf2f7; text-align:left;';
+                header.appendChild(cell);
+            });
+            table.appendChild(header);
 
-            usuarios = usuarios.filter(usuario => !(usuario.user === username && usuario.tipo === 'comum'));
-            localStorage.setItem('usuarios', JSON.stringify(usuarios));
-            alert(`A conta de ${username} foi excluída.`);
-            carregarUsuariosAdmin1();
-        }
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #ddd';
+                const values = [
+                    `${user.username || '-'}\n${user.full_name || '-'}`,
+                    user.email || '-',
+                    user.city || '-',
+                    user.age ? `${user.age} anos` : '-',
+                    user.gender_identity || '-'
+                ];
+                values.forEach(value => {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    cell.style.cssText = 'padding:8px; white-space:pre-line;';
+                    row.appendChild(cell);
+                });
+                table.appendChild(row);
+            });
 
-        function masterResetAdmin1() {
-            let novaSenha = document.getElementById('master-nova-senha-admin1').value;
-            if (!novaSenha) {
-                alert('Digite a nova senha para o Admin 1.');
-                return;
-            }
-            let usuarios = JSON.parse(localStorage.getItem('usuarios'));
-            let adm = usuarios.find(u => u.tipo === 'admin1');
-            if (adm) {
-                adm.pass = novaSenha;
-                localStorage.setItem('usuarios', JSON.stringify(usuarios));
-                alert('A senha do Admin 1 foi redefinida com sucesso pelo Admin Master!');
-                document.getElementById('master-nova-senha-admin1').value = '';
-            }
+            container.replaceChildren(table);
         }
 
         function atualizarNavegacao() {
-            document.getElementById('nav-perfil').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo !== 'comum');
-            document.getElementById('nav-painel-admin').classList.toggle('hidden', !usuarioLogado || usuarioLogado.tipo !== 'admin1');
-            document.getElementById('nav-login').classList.toggle('hidden', !!usuarioLogado);
-            document.getElementById('nav-sair').classList.toggle('hidden', !usuarioLogado);
+            return window.refreshAuthNavigation();
         }
 
         function abrirPainelAdmin() {
-            if (usuarioLogado && usuarioLogado.tipo === 'admin1') {
-                mostrarSecao('admin1');
-            } else if (usuarioLogado && usuarioLogado.tipo === 'master') {
-                mostrarSecao('master');
-            }
+            if (!window.appAuth?.isAdmin) return mostrarSecao('login');
+            usuarioLogado = { ...window.appAuth.profile, tipo: 'admin1' };
+            mostrarSecao('admin1');
         }
 
-        function logout() {
+        async function logout() {
+            const supabase = await window.supabaseReady;
+            await supabase.auth.signOut();
             usuarioLogado = null;
-            sessionStorage.removeItem('usuarioLogado');
-            atualizarNavegacao();
+            await atualizarNavegacao();
             mostrarSecao('home');
         }
     </script>
