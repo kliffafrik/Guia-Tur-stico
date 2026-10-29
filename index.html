@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <title>Pontos Turísticos de Brasília - Home</title>
+    <!-- ESTILO RÁPIDO PARA O HERO BANNER (Podes mover para o style.css se preferires) -->
+    <style>
+        .hero-banner {
+            position: relative;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('hero_bg.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,15 +33,19 @@
             <a href="index.html" id="nav-sair" class="hidden">Sair</a>
         </nav>
 
-        <!-- SEU CONTEÚDO ORIGINAL INTACTO -->
+        <!-- ========================================== -->
+        <!--     ALTERAÇÃO: NOVO HERO BANNER            -->
+        <!-- ========================================== -->
         <div id="secao-home">
-            <h1 id="site-titulo">Guia Turístico</h1>
-            <h2 id="site-subtitulo" style="font-size: 18px; color: #4a5568; border: none; margin-top: 0;">Distrito Federal, Brasil</h2>
-            
-            <img src="brasilia.jpg" alt="Vista de Brasília" class="img-turismo">
-            
-            <p>Explore os principais marcos arquitetônicos, culturais e históricos de Brasília, Ceilândia e Taguatinga.</p>
+            <div class="hero-banner">
+                <h1 id="site-titulo" style="color: white; border: none; margin-bottom: 5px; font-size: 2.5rem;">Guia Turístico</h1>
+                <h2 id="site-subtitulo" style="font-size: 18px; color: #f0f0f0; border: none; margin-top: 0; font-weight: normal;">Distrito Federal, Brasil</h2>
+                <p style="margin-top: 15px; color: #e2e8f0; font-size: 1.1rem; max-width: 600px; margin-left: auto; margin-right: auto;">Explore os principais marcos arquitetônicos, culturais e históricos de Brasília, Ceilândia e Taguatinga.</p>
+            </div>
         </div>
+        <!-- ========================================== -->
+        <!-- FIM DA ALTERAÇÃO                           -->
+        <!-- ========================================== -->
 
         <!-- SEÇÃO: LOGIN -->
         <div id="secao-login" class="auth-container hidden">
