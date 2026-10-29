@@ -1,13 +1,30 @@
 (() => {
     const locais = {
+        // --- Ceilândia ---
         'bibliotheca_publica_carlos_drummond_de_andrade.html': 'Biblioteca Pública Carlos Drummond de Andrade',
         'casa_do_cantador.html': 'Casa do Cantador',
-        'catedral.html': 'Catedral de Brasília',
-        'esplanada_dos_ministerios.html': 'Esplanada dos Ministérios',
         'feira_central_da_ceilandia.html': 'Feira Central da Ceilândia',
         'parque_setor_o.html': 'Parque Setor O',
+        'casa_akotirene.html': 'Casa Akotirene',
+        'espaco_jovem_de_expressao.html': 'Espaço Jovem de Expressão',
+        'praca_do_hip_hop.html': 'Praça do Hip Hop',
+        'teatro_newton_rossi.html': 'Teatro Newton Rossi',
+
+        // --- Brasília ---
+        'catedral.html': 'Catedral de Brasília',
+        'esplanada_dos_ministerios.html': 'Esplanada dos Ministérios',
+        'rodoviaria_do_plano_piloto.html': 'Rodoviária do Plano Piloto',
+        'memorial_jk.html': 'Memorial JK',
+        'memorial_dos_povos_indigenas.html': 'Memorial dos Povos Indígenas',
+        'espaco_cultural_renato_russo.html': 'Espaço Cultural Renato Russo',
+        'ccbb_brasilia.html': 'Centro Cultural Banco do Brasil (CCBB Brasília)',
+        'clube_do_choro_de_brasilia.html': 'Clube do Choro de Brasília',
+
+        // --- Taguatinga ---
         'praca_do_relogio.html': 'Praça do Relógio',
-        'rodoviaria_do_plano_piloto.html': 'Rodoviária do Plano Piloto'
+        'mercado_sul.html': 'Mercado Sul (Mercadão Sul)',
+        'taguaparque.html': 'Taguaparque',
+        'parque_ecologico_do_cortado.html': 'Parque Ecológico do Cortado'
     };
 
     async function iniciar() {
