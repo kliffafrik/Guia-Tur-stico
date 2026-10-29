@@ -10,85 +10,107 @@
         'rodoviaria_do_plano_piloto.html': 'Rodoviária do Plano Piloto'
     };
 
-    function usuarioAtual() {
-        return sessionStorage.getItem('usuarioLogado');
-    }
-
-    function carregarFavoritos(usuario) {
-        const favoritos = JSON.parse(localStorage.getItem('favoritos') || '{}');
-        return Array.isArray(favoritos[usuario]) ? favoritos[usuario] : [];
-    }
-
-    function salvarFavoritos(usuario, itens) {
-        const favoritos = JSON.parse(localStorage.getItem('favoritos') || '{}');
-        favoritos[usuario] = itens;
-        localStorage.setItem('favoritos', JSON.stringify(favoritos));
-    }
-
-    function atualizarBotao(botao) {
-        const usuario = usuarioAtual();
-        if (!usuario) {
-            botao.textContent = 'Entre para favoritar';
-            botao.setAttribute('aria-pressed', 'false');
+    async function iniciar() {
+        const lista = document.getElementById('lista-favoritos');
+        const botoes = Array.from(document.querySelectorAll('[data-favorito]'));
+        const auth = await window.authNavigationReady;
+        if (!auth.user) {
+            botoes.forEach(botao => {
+                botao.textContent = 'Entre para favoritar';
+                botao.setAttribute('aria-pressed', 'false');
+            });
+            if (lista) lista.textContent = 'Entre na sua conta para ver seus locais favoritos.';
+            botoes.forEach(botao => botao.addEventListener('click', () => {
+                window.location.href = 'index.html?login=1';
+            }));
             return;
         }
 
-        const ativo = carregarFavoritos(usuario).includes(botao.dataset.favorito);
-        botao.textContent = ativo ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
-        botao.setAttribute('aria-pressed', String(ativo));
-    }
+        const supabase = await window.supabaseReady;
+        const userId = auth.user.id;
+        const { data, error } = await supabase
+            .from('favorites')
+            .select('destination_slug')
+            .eq('user_id', userId);
+        if (error) throw error;
 
-    document.querySelectorAll('[data-favorito]').forEach(botao => {
-        atualizarBotao(botao);
-        botao.addEventListener('click', () => {
-            const usuario = usuarioAtual();
-            if (!usuario) {
-                window.location.href = 'index.html?login=1';
+        const itens = new Set((data || []).map(item => item.destination_slug));
+        const atualizarBotao = botao => {
+            const ativo = itens.has(botao.dataset.favorito);
+            botao.textContent = ativo ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+            botao.setAttribute('aria-pressed', String(ativo));
+        };
+
+        async function definirFavorito(slug, ativo) {
+            const resultado = ativo
+                ? await supabase.from('favorites').insert({ user_id: userId, destination_slug: slug })
+                : await supabase.from('favorites').delete().eq('user_id', userId).eq('destination_slug', slug);
+            if (resultado.error) throw resultado.error;
+            if (ativo) itens.add(slug);
+            else itens.delete(slug);
+        }
+
+        async function renderizarLista() {
+            if (!lista) return;
+            lista.replaceChildren();
+            const validos = Array.from(itens).filter(item => locais[item]);
+            if (!validos.length) {
+                lista.textContent = 'Você ainda não adicionou locais aos favoritos.';
                 return;
             }
 
-            const local = botao.dataset.favorito;
-            const favoritos = carregarFavoritos(usuario);
-            salvarFavoritos(usuario, favoritos.includes(local)
-                ? favoritos.filter(item => item !== local)
-                : [...favoritos, local]);
+            const ul = document.createElement('ul');
+            validos.forEach(item => {
+                const li = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = item;
+                link.textContent = locais[item];
+
+                const remover = document.createElement('button');
+                remover.type = 'button';
+                remover.textContent = 'Remover';
+                remover.addEventListener('click', async () => {
+                    remover.disabled = true;
+                    try {
+                        await definirFavorito(item, false);
+                        li.remove();
+                        if (!ul.children.length) lista.textContent = 'Você ainda não adicionou locais aos favoritos.';
+                        botoes.forEach(atualizarBotao);
+                    } catch (removeError) {
+                        alert('Não foi possível remover este favorito. Tente novamente.');
+                        remover.disabled = false;
+                    }
+                });
+
+                li.append(link, document.createTextNode(' '), remover);
+                ul.appendChild(li);
+            });
+            lista.appendChild(ul);
+        }
+
+        botoes.forEach(botao => {
             atualizarBotao(botao);
-        });
-    });
-
-    const lista = document.getElementById('lista-favoritos');
-    if (!lista) return;
-
-    const usuario = usuarioAtual();
-    if (!usuario) {
-        lista.textContent = 'Entre na sua conta para ver seus locais favoritos.';
-        return;
-    }
-
-    const itens = carregarFavoritos(usuario).filter(item => locais[item]);
-    if (itens.length === 0) {
-        lista.textContent = 'Você ainda não adicionou locais aos favoritos.';
-        return;
-    }
-
-    const ul = document.createElement('ul');
-    itens.forEach(item => {
-        const li = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = item;
-        link.textContent = locais[item];
-
-        const remover = document.createElement('button');
-        remover.type = 'button';
-        remover.textContent = 'Remover';
-        remover.addEventListener('click', () => {
-            salvarFavoritos(usuario, carregarFavoritos(usuario).filter(favorito => favorito !== item));
-            li.remove();
-            if (!ul.children.length) lista.textContent = 'Você ainda não adicionou locais aos favoritos.';
+            botao.addEventListener('click', async () => {
+                const slug = botao.dataset.favorito;
+                botao.disabled = true;
+                try {
+                    await definirFavorito(slug, !itens.has(slug));
+                    botoes.forEach(atualizarBotao);
+                    await renderizarLista();
+                } catch (favoriteError) {
+                    alert('Não foi possível atualizar seus favoritos. Tente novamente.');
+                } finally {
+                    botao.disabled = false;
+                }
+            });
         });
 
-        li.append(link, document.createTextNode(' '), remover);
-        ul.appendChild(li);
+        await renderizarLista();
+    }
+
+    iniciar().catch(error => {
+        console.error('Falha ao carregar favoritos:', error);
+        const lista = document.getElementById('lista-favoritos');
+        if (lista) lista.textContent = 'Não foi possível carregar os favoritos. Tente novamente mais tarde.';
     });
-    lista.appendChild(ul);
 })();

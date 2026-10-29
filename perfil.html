@@ -32,21 +32,22 @@
 
     <script src="auth-navigation.js"></script>
     <script>
-        let usuarioSalvo = sessionStorage.getItem('usuarioLogado');
-        let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
-        let usuario = usuarios.find(item => item.user === usuarioSalvo);
+        window.authNavigationReady.then(({ user, profile, isAdmin }) => {
+            if (!user || !profile || isAdmin) {
+                window.location.replace(isAdmin ? 'index.html?painel-admin=1' : 'index.html?login=1');
+                return;
+            }
 
-        if (!usuario || usuario.tipo !== 'comum') {
-            window.location.replace(usuario && usuario.tipo === 'admin1' ? 'index.html?painel-admin=1' : 'index.html?login=1');
-        } else {
-            document.getElementById('perfil-nome').textContent = usuario.nome || usuario.user;
-            document.getElementById('perfil-usuario').textContent = usuario.user;
-            document.getElementById('perfil-email').textContent = usuario.email || '-';
-            document.getElementById('perfil-cidade').textContent = usuario.cidade || '-';
-            document.getElementById('perfil-idade').textContent = usuario.idade ? usuario.idade + ' anos' : '-';
-            document.getElementById('perfil-identidade').textContent = usuario.identidadeGenero || usuario.sexo || '-';
+            document.getElementById('perfil-nome').textContent = profile.full_name || profile.username;
+            document.getElementById('perfil-usuario').textContent = profile.username;
+            document.getElementById('perfil-email').textContent = profile.email || user.email || '-';
+            document.getElementById('perfil-cidade').textContent = profile.city || '-';
+            document.getElementById('perfil-idade').textContent = profile.age ? profile.age + ' anos' : '-';
+            document.getElementById('perfil-identidade').textContent = profile.gender_identity || '-';
             document.getElementById('perfil-conteudo').classList.remove('hidden');
-        }
+        }).catch(() => {
+            window.location.replace('index.html?login=1');
+        });
     </script>
 </body>
 </html>
