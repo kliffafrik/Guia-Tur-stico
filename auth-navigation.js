@@ -128,4 +128,14 @@
             }
         });
     }).catch(() => {});
+        // Esconde automaticamente qualquer imagem que falhar ao carregar
+    document.querySelectorAll('img').forEach(img => {
+        if (img.complete && img.naturalWidth === 0) {
+            img.hidden = true;
+        } else {
+            img.addEventListener('error', () => {
+                img.hidden = true;
+            });
+        }
+    });
 })();
