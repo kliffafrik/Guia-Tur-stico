@@ -21,7 +21,7 @@ body {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra suave estilo moderno */
-    box-sizing: border-radius;
+    box-sizing: border-box;
 }
 
 /* ==========================================
@@ -203,4 +203,62 @@ p {
     margin: 15px auto 0 auto;
     color: #f0f0f0;
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* ==========================================
+   BOTÕES DE FAVORITOS
+   ========================================== */
+button[data-favorito] {
+    display: inline-block;
+    background-color: #edf2f7;
+    color: #2d3748;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 18px;
+    margin: 8px 0;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Quando o mouse passa por cima (Adicionar aos favoritos) */
+button[data-favorito]:hover {
+    background-color: #3182ce;
+    color: #ffffff;
+    border-color: #3182ce;
+    transform: translateY(-2px);
+}
+
+/* Quando o local JÁ está favoritado (Remover dos favoritos) */
+button[data-favorito][aria-pressed="true"] {
+    background-color: #2b6cb0;
+    color: #ffffff;
+    border-color: #2b6cb0;
+}
+
+/* Quando o mouse passa por cima de "Remover dos favoritos" */
+button[data-favorito][aria-pressed="true"]:hover {
+    background-color: #c53030;
+    color: #ffffff;
+    border-color: #c53030;
+}
+
+/* Botões de remover dentro da página favoritos.html */
+#lista-favoritos button {
+    background-color: #e53e3e;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#lista-favoritos button:hover {
+    background-color: #9b2c2c;
 }
